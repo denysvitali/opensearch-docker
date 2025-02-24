@@ -11,10 +11,16 @@ function cleanup {
   rm -rf "$tempdir"
 }
 
+function info(){
+    echo -e "\e[32m$1\e[0m"
+}
+
 # Copy the source files to the temp dir
 cp -r opensearch-build/docker/release/config/opensearch/* "$tempdir"
 cp opensearch-build/config/opensearch.yml "$tempdir"
 cp opensearch-build/scripts/opensearch-onetime-setup.sh "$tempdir"
+
+info "Building $IMAGE_NAME:$OPENSEARCH_VERSION"
 
 # Build docker image
 docker buildx build \

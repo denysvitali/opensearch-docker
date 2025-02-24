@@ -35,6 +35,5 @@ jobs:
           IMAGE_NAME: ghcr.io/${{ github.repository }}
           IMAGE_TAG: ${{ steps.version.outputs.VERSION }}
         run: |
-          chmod +x ./build.sh
           ./build.sh "$IMAGE_NAME" "$IMAGE_TAG"
           docker push "$IMAGE_NAME:$IMAGE_TAG"
