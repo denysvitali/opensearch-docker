@@ -19,7 +19,7 @@ cp opensearch-build/scripts/opensearch-onetime-setup.sh "$tempdir"
 # Build docker image
 docker buildx build \
     --platform linux/amd64,linux/arm64 \
-    --arg VERSION="${OPENSEARCH_VERSION}" \
+    --build-arg VERSION="${OPENSEARCH_VERSION}" \
     -t "$IMAGE_NAME:$OPENSEARCH_VERSION" \
     -f "Dockerfile.alpine" \
     "$tempdir"
