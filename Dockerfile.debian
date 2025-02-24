@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ########################### Stage 0 ########################
-ARG ALPINE_VERSION=3.21
-FROM alpine:${ALPINE_VERSION} AS linux_stage_0
+ARG DEBIAN_VERSION=bookworm
+FROM debian:${DEBIAN_VERSION}-slim AS linux_stage_0
 
 ARG UID=1000
 ARG GID=1000
@@ -14,24 +14,21 @@ ARG OPENSEARCH_PATH_CONF=$OPENSEARCH_HOME/config
 ARG SECURITY_PLUGIN_DIR=$OPENSEARCH_HOME/plugins/opensearch-security
 ARG PERFORMANCE_ANALYZER_PLUGIN_CONFIG_DIR=$OPENSEARCH_PATH_CONF/opensearch-performance-analyzer
 
-RUN apk add --no-cache \
+RUN apt-get update && \
+    apt-get install -y \
     tar \
     gzip \
-    shadow \
-    which \
-    curl
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Download and extract OpenSearch
-RUN mkdir -p "${OPENSEARCH_HOME}" && \
-    mkdir -p $TEMP_DIR && \
-    ARCH=`uname -m` && \
-    if [[ "$ARCH" == "x86_64" ]]; then ARCH="x64"; fi && \
-    if [[ "$ARCH" == "aarch64" ]]; then ARCH="arm64"; fi && \
-    curl -L https://artifacts.opensearch.org/releases/bundle/opensearch/${VERSION}/opensearch-${VERSION}-linux-$ARCH.tar.gz \
-    -o $TEMP_DIR/opensearch.tar.gz && \
-    tar -xzf $TEMP_DIR/opensearch.tar.gz -C $OPENSEARCH_HOME --strip-components=1
+RUN mkdir -p $TEMP_DIR && \
+    mkdir -p $OPENSEARCH_HOME
+
 
 COPY ./ ${TEMP_DIR}/
+
+# Download and extract OpenSearch
+RUN ${TEMP_DIR}/download.sh
 
 RUN ls -la ${TEMP_DIR} && \
     MAJOR_VERSION_ENTRYPOINT=`echo $VERSION | cut -d. -f1` && \
@@ -46,22 +43,20 @@ RUN ls -la ${TEMP_DIR} && \
     rm -rf $TEMP_DIR
 
 ########################### Stage 1 ########################
-ARG ALPINE_VERSION=3.21
-FROM alpine:${ALPINE_VERSION}
+ARG DEBIAN_VERSION=bookworm
+FROM debian:${DEBIAN_VERSION}-slim
 
 ARG UID=1000
 ARG GID=1000
 ARG OPENSEARCH_HOME=/usr/share/opensearch
 
 # Install required packages
-RUN apk add --no-cache \
+RUN apt-get update && \
+    apt-get install -y \
     tar \
     gzip \
-    shadow \
-    which \
-    bash \
-    libstdc++ \
-    libc6-compat
+    bash && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy from Stage0
 COPY --from=linux_stage_0 --chown=$UID:$GID $OPENSEARCH_HOME $OPENSEARCH_HOME
