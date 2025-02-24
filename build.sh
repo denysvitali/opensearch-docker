@@ -28,4 +28,5 @@ docker buildx build \
     --build-arg VERSION="${OPENSEARCH_VERSION}" \
     -t "$IMAGE_NAME:$OPENSEARCH_VERSION" \
     -f "Dockerfile.alpine" \
+    --load \
     "$tempdir"
