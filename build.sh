@@ -5,6 +5,13 @@ OPENSEARCH_VERSION=${2:-2.19.0}
 # Create a temporary (working) directory:
 tempdir=$(mktemp -d)
 
+EXTRA_BUILD_ARGS=""
+
+# Push if the user has specified PUSH_TO_REGISTRY=1
+if [ "$PUSH_TO_REGISTRY" == "1" ]; then
+  EXTRA_BUILD_ARGS="--push"
+fi
+
 # Cleanup the temp dir when the script exits or dies
 trap cleanup EXIT
 function cleanup {
@@ -21,6 +28,9 @@ cp opensearch-build/config/opensearch.yml "$tempdir"
 cp opensearch-build/scripts/opensearch-onetime-setup.sh "$tempdir"
 
 info "Building $IMAGE_NAME:$OPENSEARCH_VERSION"
+if [ "$PUSH_TO_REGISTRY" == "1" ]; then
+  info "... and pushing to registry"
+fi
 
 # Build docker image
 docker buildx build \
@@ -28,5 +38,5 @@ docker buildx build \
     --build-arg VERSION="${OPENSEARCH_VERSION}" \
     -t "$IMAGE_NAME:$OPENSEARCH_VERSION" \
     -f "Dockerfile.alpine" \
-    --load \
+    $EXTRA_BUILD_ARGS \
     "$tempdir"
